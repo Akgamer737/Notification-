@@ -3,33 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OneSignal Notification Receiver</title>
-
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
-          safari_web_id: "web.onesignal.auto.33cdb166-8fda-4ab6-bcd3-b18b9bc1d285",
-        });
-
-        // Automatically ask for notification permission
-        const permission = await OneSignal.Notification.requestPermission();
-        if (permission === "granted") {
-          console.log("User granted notification permission.");
-        } else {
-          console.log("User denied notification permission.");
-        }
-      });
-    </script>
+    <title>WebPushr Notification Receiver</title>
 </head>
 <body>
 
-    <h2>Welcome to OneSignal Notification Receiver</h2>
-    <p>You'll be asked for notification permission automatically.</p>
+    <h2>Welcome to WebPushr Notification Receiver</h2>
+    <p>Click "Allow" when prompted to receive notifications.</p>
+    
+    <!-- WebPushr Tracking Code -->
+    <script>(function(w,d, s, id) {
+        if(typeof(w.webpushr)!=='undefined') return;
+        w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};
+        var js, fjs = d.getElementsByTagName(s)[0];
+        js = d.createElement(s); js.id = id; js.async=1; 
+        js.src = "https://cdn.webpushr.com/app.min.js";
+        fjs.parentNode.appendChild(js);
+    }(window,document, 'script', 'webpushr-jssdk'));
+
+    // Setup WebPushr with your Key
+    webpushr('setup',{'key':'BJ6F7xNjG0kIsvJMwpl5LXneFw46f5g56gWvI8AmPQMIlwv7HEL5C1gesGGzdKDBeSlFPuQlrC3TMqQfgrpKIJI' });
+
+    // Request Notification Permission Automatically
+    webpushr('register');
+    </script>
+    <!-- End WebPushr Tracking Code -->
 
 </body>
 </html>
