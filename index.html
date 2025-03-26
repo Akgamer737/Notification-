@@ -4,29 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebPushr Notification Receiver</title>
+
+    <!-- Webpushr SDK -->
+    <script>
+        (function(w, d, s, id) {
+            if (typeof(w.webpushr) !== "undefined") return;
+            w.webpushr = w.webpushr || function() {
+                (w.webpushr.q = w.webpushr.q || []).push(arguments)
+            };
+            var js, fjs = d.getElementsByTagName(s)[0];
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://cdn.webpushr.com/app.min.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(window, document, "script", "webpushr-jssdk"));
+        
+        webpushr('setup', {
+            key: "BJ6F7xNjG0kIsvJMwpl5LXneFw46f5g56gWvI8AmPQMIlwv7HEL5C1gesGGzdKDBeSlFPuQlrC3TMqQfgrpKIJI",
+            integration: "custom"
+        });
+    </script>
 </head>
 <body>
 
     <h2>Welcome to WebPushr Notification Receiver</h2>
-    <p>Click "Allow" when prompted to receive notifications.</p>
-    
-    <!-- WebPushr Tracking Code -->
-    <script>(function(w,d, s, id) {
-        if(typeof(w.webpushr)!=='undefined') return;
-        w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};
-        var js, fjs = d.getElementsByTagName(s)[0];
-        js = d.createElement(s); js.id = id; js.async=1; 
-        js.src = "https://cdn.webpushr.com/app.min.js";
-        fjs.parentNode.appendChild(js);
-    }(window,document, 'script', 'webpushr-jssdk'));
-
-    // Setup WebPushr with your Key
-    webpushr('setup',{'key':'BJ6F7xNjG0kIsvJMwpl5LXneFw46f5g56gWvI8AmPQMIlwv7HEL5C1gesGGzdKDBeSlFPuQlrC3TMqQfgrpKIJI' });
-
-    // Request Notification Permission Automatically
-    webpushr('register');
-    </script>
-    <!-- End WebPushr Tracking Code -->
+    <p>You will be asked to subscribe to notifications.</p>
+    <button onclick="webpushr('optin')">Subscribe to Notifications</button>
 
 </body>
 </html>
