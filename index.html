@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video App</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            width: 80%;
+            max-width: 400px;
+            margin: 10px 0;
+        }
+        iframe {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video App</h1>
+    <p>Enter YouTube Video URL:</p>
+    <input type="text" id="videoURL" placeholder="Paste YouTube URL here">
+    <button onclick="loadVideo()">Load Video</button>
+
+    <div id="videoContainer"></div>
+
+    <script>
+        function loadVideo() {
+            const videoURL = document.getElementById("videoURL").value;
+            const videoId = extractVideoID(videoURL);
+
+            if (videoId) {
+                const embedURL = `https://www.youtube.com/embed/${videoId}`;
+                document.getElementById("videoContainer").innerHTML = `<iframe src="${embedURL}" allowfullscreen></iframe>`;
+            } else {
+                alert("Invalid YouTube URL. Please try again.");
+            }
+        }
+
+        // Extract YouTube video ID from various URL formats
+        function extractVideoID(url) {
+            const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+    </script>
+</body>
+</html>
