@@ -3,57 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video App</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        input, button {
-            padding: 10px;
-            width: 80%;
-            max-width: 400px;
-            margin: 10px 0;
-        }
-        iframe {
-            width: 100%;
-            max-width: 800px;
-            height: 450px;
-            border: none;
-            margin-top: 20px;
-        }
-    </style>
+    <title>OneSignal Notification Receiver</title>
+    
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
+          safari_web_id: "web.onesignal.auto.33cdb166-8fda-4ab6-bcd3-b18b9bc1d285",
+          notifyButton: {
+            enable: true,
+          },
+        });
+
+        // Check if user is subscribed
+        OneSignal.isPushNotificationsEnabled().then(function(isEnabled) {
+          if (isEnabled) {
+            console.log("User is subscribed to notifications.");
+          } else {
+            console.log("User is not subscribed to notifications.");
+          }
+        });
+
+      });
+    </script>
+    
 </head>
 <body>
-    <h1>YouTube Video App</h1>
-    <p>Enter YouTube Video URL:</p>
-    <input type="text" id="videoURL" placeholder="Paste YouTube URL here">
-    <button onclick="loadVideo()">Load Video</button>
 
-    <div id="videoContainer"></div>
+    <h2>Welcome to OneSignal Notification Receiver</h2>
+    <p>Click the bell icon to subscribe to notifications.</p>
 
-    <script>
-        function loadVideo() {
-            const videoURL = document.getElementById("videoURL").value;
-            const videoId = extractVideoID(videoURL);
-
-            if (videoId) {
-                const embedURL = `https://www.youtube.com/embed/${videoId}`;
-                document.getElementById("videoContainer").innerHTML = `<iframe src="${embedURL}" allowfullscreen></iframe>`;
-            } else {
-                alert("Invalid YouTube URL. Please try again.");
-            }
-        }
-
-        // Extract YouTube video ID from various URL formats
-        function extractVideoID(url) {
-            const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-            const match = url.match(regExp);
-            return match ? match[1] : null;
-        }
-    </script>
 </body>
-</html>
+</html></html>
