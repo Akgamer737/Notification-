@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OneSignal Notification Receiver</title>
-    
+
     <!-- OneSignal SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     
@@ -14,28 +14,22 @@
         await OneSignal.init({
           appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
           safari_web_id: "web.onesignal.auto.33cdb166-8fda-4ab6-bcd3-b18b9bc1d285",
-          notifyButton: {
-            enable: true,
-          },
         });
 
-        // Check if user is subscribed
-        OneSignal.isPushNotificationsEnabled().then(function(isEnabled) {
-          if (isEnabled) {
-            console.log("User is subscribed to notifications.");
-          } else {
-            console.log("User is not subscribed to notifications.");
-          }
-        });
-
+        // Automatically ask for notification permission
+        const permission = await OneSignal.Notification.requestPermission();
+        if (permission === "granted") {
+          console.log("User granted notification permission.");
+        } else {
+          console.log("User denied notification permission.");
+        }
       });
     </script>
-    
 </head>
 <body>
 
     <h2>Welcome to OneSignal Notification Receiver</h2>
-    <p>Click the bell icon to subscribe to notifications.</p>
+    <p>You'll be asked for notification permission automatically.</p>
 
 </body>
-</html></html>
+</html>
