@@ -3,33 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebPushr Notification Receiver</title>
-
-    <!-- Webpushr SDK -->
-    <script>
-        (function(w, d, s, id) {
-            if (typeof(w.webpushr) !== "undefined") return;
-            w.webpushr = w.webpushr || function() {
-                (w.webpushr.q = w.webpushr.q || []).push(arguments)
-            };
-            var js, fjs = d.getElementsByTagName(s)[0];
-            js = d.createElement(s);
-            js.id = id;
-            js.src = "https://cdn.webpushr.com/app.min.js";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(window, document, "script", "webpushr-jssdk"));
-        
-        webpushr('setup', {
-            key: "BJ6F7xNjG0kIsvJMwpl5LXneFw46f5g56gWvI8AmPQMIlwv7HEL5C1gesGGzdKDBeSlFPuQlrC3TMqQfgrpKIJI",
-            integration: "custom"
-        });
-    </script>
+    <title>Turnafest - Notification Center</title>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .notification-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-icon {
+            margin-right: 15px;
+            color: #3498db;
+            font-size: 24px;
+        }
+        .notification-content {
+            flex: 1;
+        }
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .notification-message {
+            color: #666;
+        }
+        .notification-time {
+            color: #999;
+            font-size: 12px;
+        }
+        .permission-banner {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Turnafest Notification Center</h1>
+        <p>Stay updated with the latest news and announcements</p>
+    </header>
 
-    <h2>Welcome to WebPushr Notification Receiver</h2>
-    <p>You will be asked to subscribe to notifications.</p>
-    <button onclick="webpushr('optin')">Subscribe to Notifications</button>
+    <div class="permission-banner" id="permissionBanner">
+        <p>Enable notifications to receive updates from Turnafest</p>
+        <button id="enableNotifications">Enable Notifications</button>
+    </div>
 
+    <div class="notification-container">
+        <div class="notification-item">
+            <div class="notification-icon">🔔</div>
+            <div class="notification-content">
+                <div class="notification-title">Welcome to Turnafest!</div>
+                <div class="notification-message">You'll receive notifications about upcoming events and important announcements here.</div>
+                <div class="notification-time">Just now</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2023 Turnafest. All rights reserved.</p>
+    </footer>
+
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
+                safari_web_id: "web.onesignal.auto.33cdb166-8fda-4ab6-bcd3-b18b9bc1d285",
+                notifyButton: {
+                    enable: true,
+                },
+            });
+            
+            // Check if notifications are permitted
+            OneSignal.Notifications.isPushSupported().then(function(isSupported) {
+                if (isSupported) {
+                    OneSignal.Notifications.permission.then(function(permission) {
+                        const permissionBanner = document.getElementById('permissionBanner');
+                        if (permission === false) {
+                            permissionBanner.style.display = 'block';
+                        }
+                    });
+                }
+            });
+            
+            // Handle notification permission request
+            document.getElementById('enableNotifications').addEventListener('click', function() {
+                OneSignal.Notifications.requestPermission().then(function(accepted) {
+                    if (accepted) {
+                        document.getElementById('permissionBanner').style.display = 'none';
+                    }
+                });
+            });
+            
+            // Handle received notifications
+            OneSignal.Notifications.addEventListener('click', function(event) {
+                console.log('Notification clicked:', event);
+                // You can handle notification clicks here
+                // For example, redirect to a specific page based on the notification
+            });
+            
+            OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
+                console.log('Notification received in foreground:', event);
+                // Prevent the notification from displaying since we're showing it in our UI
+                event.preventDefault();
+                
+                // Add the notification to your UI
+                addNotificationToUI({
+                    title: event.notification.title,
+                    message: event.notification.body,
+                    time: 'Just now'
+                });
+            });
+        });
+        
+        function addNotificationToUI(notification) {
+            const container = document.querySelector('.notification-container');
+            const newNotification = document.createElement('div');
+            newNotification.className = 'notification-item';
+            newNotification.innerHTML = `
+                <div class="notification-icon">🔔</div>
+                <div class="notification-content">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">${notification.time}</div>
+                </div>
+            `;
+            
+            // Insert at the top of the container
+            if (container.firstChild) {
+                container.insertBefore(newNotification, container.firstChild);
+            } else {
+                container.appendChild(newNotification);
+            }
+        }
+    </script>
 </body>
 </html>
