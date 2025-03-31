@@ -3,46 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offerwall Rewards</title>
-    <script>
-        // Generate or get a unique user ID
-        let userId = localStorage.getItem("user_id");
-        if (!userId) {
-            userId = "user_" + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem("user_id", userId);
-        }
-
-        function openOfferwall() {
-            window.location.href = `https://offerwall.pubscale.com/69433273?user_id=${userId}`;
-        }
-
-        function checkRewards() {
-            fetch(`https://offerwall.pubscale.com/api/v1/rewards?app_id=69433273&user_id=${userId}`, {
-                headers: {
-                    "Authorization": "3d148e99-ad40-4afb-8828-c8ecc4425dc6"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById("rewardAmount").innerText = "Your Earnings: " + data.rewards + " Coins";
-                } else {
-                    document.getElementById("rewardAmount").innerText = "No rewards available.";
-                }
-            })
-            .catch(error => console.error("Error fetching rewards:", error));
-        }
-    </script>
+    <title>Firebase Notification Receiver</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js"></script>
 </head>
-<body>
-    <h1>Welcome to the Offerwall</h1>
-    <p>Your ID: <b id="userId"></b></p>
-    <button onclick="openOfferwall()">Open Offerwall</button>
-    <button onclick="checkRewards()">Check Rewards</button>
-    <p id="rewardAmount">Your Earnings: 0 Coins</p>
+<body style="text-align: center; font-family: Arial, sans-serif;">
+
+    <h2>🔔 Firebase Notifications</h2>
+    <p id="status">Waiting for notifications...</p>
+    <button onclick="requestPermission()">Enable Notifications</button>
 
     <script>
-        document.getElementById("userId").innerText = userId;
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqDd6DRyeiTPbe1J0OOqR0G8q4bbDkEsE",
+            authDomain: "w-twst.firebaseapp.com",
+            projectId: "w-twst",
+            storageBucket: "w-twst.firebasestorage.app",
+            messagingSenderId: "844579566853",
+            appId: "1:844579566853:web:c2355c19c3f13069a0f36c",
+            measurementId: "G-917RKVSKRE"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        // Request Notification Permission
+        function requestPermission() {
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    console.log("Notification permission granted.");
+                    getToken();
+                } else {
+                    console.log("Notification permission denied.");
+                }
+            });
+        }
+
+        // Get Firebase Messaging Token
+        function getToken() {
+            messaging.getToken({ vapidKey: "YOUR_PUBLIC_VAPID_KEY_HERE" })
+                .then((currentToken) => {
+                    if (currentToken) {
+                        console.log("FCM Token:", currentToken);
+                        document.getElementById("status").innerText = "✅ Notifications Enabled!";
+                    } else {
+                        console.log("No registration token available.");
+                    }
+                })
+                .catch((err) => {
+                    console.error("Error retrieving token:", err);
+                });
+        }
+
+        // Handle Incoming Notifications
+        messaging.onMessage((payload) => {
+            console.log("Message received:", payload);
+            alert(`🔔 New Notification: ${payload.notification.title} - ${payload.notification.body}`);
+        });
+
+        // Register Service Worker for Background Notifications
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("firebase-messaging-sw.js")
+                .then((registration) => {
+                    console.log("Service Worker Registered:", registration);
+                    messaging.useServiceWorker(registration);
+                })
+                .catch((error) => {
+                    console.error("Service Worker Registration Failed:", error);
+                });
+        }
     </script>
+
 </body>
 </html>
