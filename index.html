@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and URL Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #preview { margin-top: 20px; }
+        img { max-width: 100%; height: auto; margin-top: 10px; }
+        button { margin-top: 10px; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Upload an Image</h2>
+    <input type="file" id="imageUpload" accept="image/*">
+    <div id="preview"></div><script>
+    document.getElementById('imageUpload').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgElement = document.createElement('img');
+                imgElement.src = e.target.result;
+                
+                const linkElement = document.createElement('p');
+                linkElement.textContent = `Image URL: ${e.target.result}`;
+                linkElement.id = "imageUrl";
+
+                const copyButton = document.createElement('button');
+                copyButton.textContent = "Copy URL";
+                copyButton.onclick = function() {
+                    navigator.clipboard.writeText(e.target.result).then(() => {
+                        alert("URL copied to clipboard!");
+                    });
+                };
+
+                const preview = document.getElementById('preview');
+                preview.innerHTML = '';
+                preview.appendChild(imgElement);
+                preview.appendChild(linkElement);
+                preview.appendChild(copyButton);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+
+</body>
+</html>
