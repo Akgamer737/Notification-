@@ -94,6 +94,15 @@
             font-weight: bold;
             color: #3498db;
         }
+        
+        .upi-id {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -102,7 +111,7 @@
         
         <div class="recipient-info">
             <p>You're sending money to:</p>
-            <p class="recipient-email">ankesh.737@fam</p>
+            <p class="recipient-email">UPI ID: <span class="upi-id">ankesh.737@fam</span></p>
         </div>
         
         <form class="payment-form" id="paymentForm">
@@ -117,11 +126,11 @@
             </div>
             
             <div class="form-group">
-                <label for="email">Your Email</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <label for="note">Payment Note (Optional)</label>
+                <input type="text" id="note" name="note" placeholder="Purpose of payment">
             </div>
             
-            <button type="submit" class="pay-btn">Continue to Payment</button>
+            <button type="submit" class="pay-btn">Pay via UPI</button>
         </form>
     </div>
     
@@ -131,16 +140,23 @@
             
             const amount = document.getElementById('amount').value;
             const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            const note = document.getElementById('note').value || 'Payment';
+            const upiId = 'ankesh.737@fam';
             
-            // Here you would typically process the payment
-            // For demo purposes, we'll just show an alert
-            alert(`Payment of ₹${amount} to ankesh.737@fam will be processed.\nName: ${name}\nEmail: ${email}`);
+            // Create UPI payment link
+            let upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}`;
+            upiLink += `&pn=${encodeURIComponent(name)}`;
+            upiLink += `&am=${amount}`;
+            upiLink += `&cu=INR`;
+            upiLink += `&tn=${encodeURIComponent(note)}`;
             
-            // In a real implementation, you would:
-            // 1. Validate the inputs
-            // 2. Connect to a payment gateway (like Razorpay, Stripe, etc.)
-            // 3. Handle the payment processing
+            // Redirect to UPI payment
+            window.location.href = upiLink;
+            
+            // Fallback in case the UPI link doesn't work
+            setTimeout(() => {
+                alert(`If UPI app didn't open automatically, please use this UPI ID manually:\n\nUPI ID: ${upiId}\nAmount: ₹${amount}\nNote: ${note}`);
+            }, 500);
         });
     </script>
 </body>
