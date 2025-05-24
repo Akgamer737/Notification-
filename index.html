@@ -1,156 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Elements Viewer</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      height: 100vh;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 400px;
-      padding: 20px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      animation: fade 0.5s ease-in-out;
-      display: none;
-    }
-
-    .symbol {
-      font-size: 80px;
-      font-weight: bold;
-    }
-
-    .name {
-      font-size: 20px;
-      opacity: 0.8;
-    }
-
-    #startBtn {
-      padding: 15px 30px;
-      font-size: 18px;
-      background: #00c6ff;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-
-    #startBtn:hover {
-      background: #0072ff;
-    }
-
-    @keyframes fade {
-      0% { opacity: 0; transform: scale(0.95); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneSignal Push Notification Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <style>
+        body {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .notification-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1 class="my-4">Push Notification Demo</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">OneSignal Push Notifications</h5>
+                <p class="card-text">This demo shows how to implement web push notifications using OneSignal.</p>
+                
+                <div id="notification-permission" class="notification-status bg-light">
+                    <p>Notification permission status: <span id="permission-status" class="fw-bold">Checking...</span></p>
+                    <button id="enable-notifications" class="btn btn-primary" disabled>Enable Notifications</button>
+                    <button id="test-notification" class="btn btn-success" disabled>Send Test Notification</button>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Notification Log:</h6>
+                    <div id="notification-log" class="p-2 bg-light" style="min-height: 100px; border-radius: 5px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h5>How it works:</h5>
+            <ol>
+                <li>Click "Enable Notifications" to allow push notifications</li>
+                <li>Click "Send Test Notification" to receive a demo notification</li>
+                <li>You'll receive actual notifications even when the tab is closed</li>
+            </ol>
+        </div>
+    </div>
 
-  <button id="startBtn">Start</button>
+    <script>
+        // Initialize OneSignal with your App ID
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.init({
+                appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
+                safari_web_id: "web.onesignal.auto.1a6a5c8f-1e8b-4a3a-8f0d-2e8b5f3a1d6c",
+                notifyButton: {
+                    enable: true,
+                },
+                allowLocalhostAsSecureOrigin: true,
+            });
+            
+            // Once initialized, you can get the user ID
+            OneSignal.getUserId(function(userId) {
+                logMessage("OneSignal User ID: " + (userId || "Not available yet"));
+            });
+            
+            // Check notification permission
+            checkNotificationPermission();
+            
+            // Setup button event listeners
+            setupButtons();
+        });
 
-  <div class="container" id="elementBox">
-    <div class="symbol" id="symbol">H</div>
-    <div class="name" id="name">Hydrogen</div>
-  </div>
+        function checkNotificationPermission() {
+            OneSignal.push(function() {
+                OneSignal.Notifications.isPushSupported().then(function(isSupported) {
+                    if (isSupported) {
+                        OneSignal.Notifications.permission.then(function(permission) {
+                            updatePermissionUI(permission);
+                        });
+                    } else {
+                        document.getElementById('permission-status').textContent = "Push not supported";
+                        document.getElementById('enable-notifications').disabled = true;
+                        logMessage("Push notifications are not supported in this browser.");
+                    }
+                });
+            });
+        }
 
-  <script>
-    const elements = [
-      {symbol: "H", name: "Hydrogen"}, {symbol: "He", name: "Helium"},
-      {symbol: "Li", name: "Lithium"}, {symbol: "Be", name: "Beryllium"},
-      {symbol: "B", name: "Boron"}, {symbol: "C", name: "Carbon"},
-      {symbol: "N", name: "Nitrogen"}, {symbol: "O", name: "Oxygen"},
-      {symbol: "F", name: "Fluorine"}, {symbol: "Ne", name: "Neon"},
-      {symbol: "Na", name: "Sodium"}, {symbol: "Mg", name: "Magnesium"},
-      {symbol: "Al", name: "Aluminium"}, {symbol: "Si", name: "Silicon"},
-      {symbol: "P", name: "Phosphorus"}, {symbol: "S", name: "Sulfur"},
-      {symbol: "Cl", name: "Chlorine"}, {symbol: "Ar", name: "Argon"},
-      {symbol: "K", name: "Potassium"}, {symbol: "Ca", name: "Calcium"},
-      {symbol: "Sc", name: "Scandium"}, {symbol: "Ti", name: "Titanium"},
-      {symbol: "V", name: "Vanadium"}, {symbol: "Cr", name: "Chromium"},
-      {symbol: "Mn", name: "Manganese"}, {symbol: "Fe", name: "Iron"},
-      {symbol: "Co", name: "Cobalt"}, {symbol: "Ni", name: "Nickel"},
-      {symbol: "Cu", name: "Copper"}, {symbol: "Zn", name: "Zinc"},
-      {symbol: "Ga", name: "Gallium"}, {symbol: "Ge", name: "Germanium"},
-      {symbol: "As", name: "Arsenic"}, {symbol: "Se", name: "Selenium"},
-      {symbol: "Br", name: "Bromine"}, {symbol: "Kr", name: "Krypton"},
-      {symbol: "Rb", name: "Rubidium"}, {symbol: "Sr", name: "Strontium"},
-      {symbol: "Y", name: "Yttrium"}, {symbol: "Zr", name: "Zirconium"},
-      {symbol: "Nb", name: "Niobium"}, {symbol: "Mo", name: "Molybdenum"},
-      {symbol: "Tc", name: "Technetium"}, {symbol: "Ru", name: "Ruthenium"},
-      {symbol: "Rh", name: "Rhodium"}, {symbol: "Pd", name: "Palladium"},
-      {symbol: "Ag", name: "Silver"}, {symbol: "Cd", name: "Cadmium"},
-      {symbol: "In", name: "Indium"}, {symbol: "Sn", name: "Tin"},
-      {symbol: "Sb", name: "Antimony"}, {symbol: "Te", name: "Tellurium"},
-      {symbol: "I", name: "Iodine"}, {symbol: "Xe", name: "Xenon"},
-      {symbol: "Cs", name: "Cesium"}, {symbol: "Ba", name: "Barium"},
-      {symbol: "La", name: "Lanthanum"}, {symbol: "Ce", name: "Cerium"},
-      {symbol: "Pr", name: "Praseodymium"}, {symbol: "Nd", name: "Neodymium"},
-      {symbol: "Pm", name: "Promethium"}, {symbol: "Sm", name: "Samarium"},
-      {symbol: "Eu", name: "Europium"}, {symbol: "Gd", name: "Gadolinium"},
-      {symbol: "Tb", name: "Terbium"}, {symbol: "Dy", name: "Dysprosium"},
-      {symbol: "Ho", name: "Holmium"}, {symbol: "Er", name: "Erbium"},
-      {symbol: "Tm", name: "Thulium"}, {symbol: "Yb", name: "Ytterbium"},
-      {symbol: "Lu", name: "Lutetium"}, {symbol: "Hf", name: "Hafnium"},
-      {symbol: "Ta", name: "Tantalum"}, {symbol: "W", name: "Tungsten"},
-      {symbol: "Re", name: "Rhenium"}, {symbol: "Os", name: "Osmium"},
-      {symbol: "Ir", name: "Iridium"}, {symbol: "Pt", name: "Platinum"},
-      {symbol: "Au", name: "Gold"}, {symbol: "Hg", name: "Mercury"},
-      {symbol: "Tl", name: "Thallium"}, {symbol: "Pb", name: "Lead"},
-      {symbol: "Bi", name: "Bismuth"}, {symbol: "Po", name: "Polonium"},
-      {symbol: "At", name: "Astatine"}, {symbol: "Rn", name: "Radon"},
-      {symbol: "Fr", name: "Francium"}, {symbol: "Ra", name: "Radium"},
-      {symbol: "Ac", name: "Actinium"}, {symbol: "Th", name: "Thorium"},
-      {symbol: "Pa", name: "Protactinium"}, {symbol: "U", name: "Uranium"},
-      {symbol: "Np", name: "Neptunium"}, {symbol: "Pu", name: "Plutonium"},
-      {symbol: "Am", name: "Americium"}, {symbol: "Cm", name: "Curium"},
-      {symbol: "Bk", name: "Berkelium"}, {symbol: "Cf", name: "Californium"},
-      {symbol: "Es", name: "Einsteinium"}, {symbol: "Fm", name: "Fermium"},
-      {symbol: "Md", name: "Mendelevium"}, {symbol: "No", name: "Nobelium"},
-      {symbol: "Lr", name: "Lawrencium"}, {symbol: "Rf", name: "Rutherfordium"},
-      {symbol: "Db", name: "Dubnium"}, {symbol: "Sg", name: "Seaborgium"},
-      {symbol: "Bh", name: "Bohrium"}, {symbol: "Hs", name: "Hassium"},
-      {symbol: "Mt", name: "Meitnerium"}, {symbol: "Ds", name: "Darmstadtium"},
-      {symbol: "Rg", name: "Roentgenium"}, {symbol: "Cn", name: "Copernicium"},
-      {symbol: "Nh", name: "Nihonium"}, {symbol: "Fl", name: "Flerovium"},
-      {symbol: "Mc", name: "Moscovium"}, {symbol: "Lv", name: "Livermorium"},
-      {symbol: "Ts", name: "Tennessine"}, {symbol: "Og", name: "Oganesson"}
-    ];
+        function updatePermissionUI(permission) {
+            const statusElement = document.getElementById('permission-status');
+            const enableButton = document.getElementById('enable-notifications');
+            const testButton = document.getElementById('test-notification');
+            
+            if (permission) {
+                statusElement.textContent = "Granted";
+                statusElement.className = "fw-bold text-success";
+                enableButton.textContent = "Disable Notifications";
+                enableButton.className = "btn btn-warning";
+                testButton.disabled = false;
+                logMessage("Notification permission granted.");
+            } else {
+                statusElement.textContent = "Denied";
+                statusElement.className = "fw-bold text-danger";
+                enableButton.textContent = "Enable Notifications";
+                enableButton.className = "btn btn-primary";
+                testButton.disabled = true;
+                logMessage("Notification permission denied.");
+            }
+            enableButton.disabled = false;
+        }
 
-    let index = 0;
-    let interval;
+        function setupButtons() {
+            document.getElementById('enable-notifications').addEventListener('click', function() {
+                OneSignal.push(function() {
+                    OneSignal.Notifications.permission.then(function(permission) {
+                        if (permission) {
+                            // If permission is granted, clicking will revoke it
+                            OneSignal.Notifications.setPermission(false);
+                            logMessage("Notifications disabled.");
+                        } else {
+                            // If permission is not granted, request it
+                            OneSignal.Notifications.requestPermission().then(function(accepted) {
+                                if (accepted) {
+                                    logMessage("Notification permission accepted.");
+                                } else {
+                                    logMessage("Notification permission rejected.");
+                                }
+                                checkNotificationPermission();
+                            });
+                        }
+                    });
+                });
+            });
+            
+            document.getElementById('test-notification').addEventListener('click', function() {
+                OneSignal.push(function() {
+                    // This would normally be sent from your server
+                    // For demo purposes, we'll simulate it
+                    OneSignal.Notifications.addListener('foreground', function(event) {
+                        logMessage("Notification received while browser is open: " + event.title);
+                    });
+                    
+                    OneSignal.Notifications.addListener('click', function(event) {
+                        logMessage("Notification clicked: " + event.title);
+                    });
+                    
+                    // Simulate a notification
+                    const notification = {
+                        title: "Test Notification",
+                        message: "This is a test notification from your website!",
+                        url: window.location.href,
+                        icon: "https://onesignal.com/images/notification_logo.png"
+                    };
+                    
+                    OneSignal.Notifications.create(notification).then(function() {
+                        logMessage("Test notification sent successfully.");
+                    }).catch(function(error) {
+                        logMessage("Error sending test notification: " + error);
+                    });
+                });
+            });
+        }
 
-    const symbol = document.getElementById("symbol");
-    const name = document.getElementById("name");
-    const box = document.getElementById("elementBox");
-    const startBtn = document.getElementById("startBtn");
-
-    startBtn.addEventListener("click", () => {
-      startBtn.style.display = "none";
-      box.style.display = "block";
-      interval = setInterval(() => {
-        symbol.textContent = elements[index].symbol;
-        name.textContent = elements[index].name;
-        index = (index + 1) % elements.length;
-      }, 500);
-    });
-  </script>
-
+        function logMessage(message) {
+            const logElement = document.getElementById('notification-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logElement.prepend(logEntry);
+            
+            // Keep log to 10 entries max
+            if (logElement.children.length > 10) {
+                logElement.removeChild(logElement.lastChild);
+            }
+        }
+    </script>
 </body>
 </html>
