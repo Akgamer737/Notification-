@@ -17,6 +17,19 @@
             padding: 15px;
             border-radius: 5px;
         }
+        #notification-log {
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -36,7 +49,7 @@
                 
                 <div class="mt-4">
                     <h6>Notification Log:</h6>
-                    <div id="notification-log" class="p-2 bg-light" style="min-height: 100px; border-radius: 5px;"></div>
+                    <div id="notification-log"></div>
                 </div>
             </div>
         </div>
@@ -52,9 +65,14 @@
     </div>
 
     <script>
+        // Store OneSignal reference globally
+        let oneSignalInitialized = false;
+        let oneSignalInstance = null;
+
         // Initialize OneSignal with your App ID
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(function(OneSignal) {
+            oneSignalInstance = OneSignal;
             OneSignal.init({
                 appId: "21ecc723-d37d-4e0a-b86b-52217fc4bf93",
                 safari_web_id: "web.onesignal.auto.1a6a5c8f-1e8b-4a3a-8f0d-2e8b5f3a1d6c",
@@ -62,33 +80,41 @@
                     enable: true,
                 },
                 allowLocalhostAsSecureOrigin: true,
+            }).then(function() {
+                oneSignalInitialized = true;
+                logMessage("OneSignal initialized successfully");
+                
+                // Once initialized, you can get the user ID
+                OneSignal.getUserId().then(function(userId) {
+                    logMessage("OneSignal User ID: " + (userId || "Not available yet"));
+                });
+                
+                // Check notification permission
+                checkNotificationPermission();
+                
+                // Setup button event listeners
+                setupButtons();
+            }).catch(function(error) {
+                logMessage("OneSignal initialization error: " + error);
             });
-            
-            // Once initialized, you can get the user ID
-            OneSignal.getUserId(function(userId) {
-                logMessage("OneSignal User ID: " + (userId || "Not available yet"));
-            });
-            
-            // Check notification permission
-            checkNotificationPermission();
-            
-            // Setup button event listeners
-            setupButtons();
         });
 
         function checkNotificationPermission() {
-            OneSignal.push(function() {
-                OneSignal.Notifications.isPushSupported().then(function(isSupported) {
-                    if (isSupported) {
-                        OneSignal.Notifications.permission.then(function(permission) {
-                            updatePermissionUI(permission);
-                        });
-                    } else {
-                        document.getElementById('permission-status').textContent = "Push not supported";
-                        document.getElementById('enable-notifications').disabled = true;
-                        logMessage("Push notifications are not supported in this browser.");
-                    }
-                });
+            if (!oneSignalInitialized) {
+                logMessage("OneSignal not initialized yet");
+                return;
+            }
+            
+            oneSignalInstance.Notifications.isPushSupported().then(function(isSupported) {
+                if (isSupported) {
+                    oneSignalInstance.Notifications.permission().then(function(permission) {
+                        updatePermissionUI(permission);
+                    });
+                } else {
+                    document.getElementById('permission-status').textContent = "Push not supported";
+                    document.getElementById('enable-notifications').disabled = true;
+                    logMessage("Push notifications are not supported in this browser.");
+                }
             });
         }
 
@@ -117,52 +143,58 @@
 
         function setupButtons() {
             document.getElementById('enable-notifications').addEventListener('click', function() {
-                OneSignal.push(function() {
-                    OneSignal.Notifications.permission.then(function(permission) {
-                        if (permission) {
-                            // If permission is granted, clicking will revoke it
-                            OneSignal.Notifications.setPermission(false);
-                            logMessage("Notifications disabled.");
-                        } else {
-                            // If permission is not granted, request it
-                            OneSignal.Notifications.requestPermission().then(function(accepted) {
-                                if (accepted) {
-                                    logMessage("Notification permission accepted.");
-                                } else {
-                                    logMessage("Notification permission rejected.");
-                                }
-                                checkNotificationPermission();
-                            });
-                        }
-                    });
+                if (!oneSignalInitialized) {
+                    logMessage("OneSignal not initialized yet - please wait");
+                    return;
+                }
+                
+                oneSignalInstance.Notifications.permission().then(function(permission) {
+                    if (permission) {
+                        // If permission is granted, clicking will revoke it
+                        oneSignalInstance.Notifications.setPermission(false);
+                        logMessage("Notifications disabled.");
+                        updatePermissionUI(false);
+                    } else {
+                        // If permission is not granted, request it
+                        oneSignalInstance.Notifications.requestPermission().then(function(accepted) {
+                            if (accepted) {
+                                logMessage("Notification permission accepted.");
+                            } else {
+                                logMessage("Notification permission rejected.");
+                            }
+                            checkNotificationPermission();
+                        });
+                    }
                 });
             });
             
             document.getElementById('test-notification').addEventListener('click', function() {
-                OneSignal.push(function() {
-                    // This would normally be sent from your server
-                    // For demo purposes, we'll simulate it
-                    OneSignal.Notifications.addListener('foreground', function(event) {
-                        logMessage("Notification received while browser is open: " + event.title);
-                    });
-                    
-                    OneSignal.Notifications.addListener('click', function(event) {
-                        logMessage("Notification clicked: " + event.title);
-                    });
-                    
-                    // Simulate a notification
-                    const notification = {
-                        title: "Test Notification",
-                        message: "This is a test notification from your website!",
-                        url: window.location.href,
-                        icon: "https://onesignal.com/images/notification_logo.png"
-                    };
-                    
-                    OneSignal.Notifications.create(notification).then(function() {
-                        logMessage("Test notification sent successfully.");
-                    }).catch(function(error) {
-                        logMessage("Error sending test notification: " + error);
-                    });
+                if (!oneSignalInitialized) {
+                    logMessage("OneSignal not initialized yet - please wait");
+                    return;
+                }
+                
+                // Add event listeners for notification interactions
+                oneSignalInstance.Notifications.addEventListener('foreground', function(event) {
+                    logMessage("Notification received while browser is open: " + event.title);
+                });
+                
+                oneSignalInstance.Notifications.addEventListener('click', function(event) {
+                    logMessage("Notification clicked: " + event.title);
+                });
+                
+                // Simulate a notification
+                const notification = {
+                    title: "Test Notification",
+                    body: "This is a test notification from your website!",
+                    url: window.location.href,
+                    icon: "https://onesignal.com/images/notification_logo.png"
+                };
+                
+                oneSignalInstance.Notifications.create(notification).then(function() {
+                    logMessage("Test notification sent successfully.");
+                }).catch(function(error) {
+                    logMessage("Error sending test notification: " + error);
                 });
             });
         }
@@ -171,14 +203,26 @@
             const logElement = document.getElementById('notification-log');
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
             logEntry.textContent = `[${timestamp}] ${message}`;
             logElement.prepend(logEntry);
             
-            // Keep log to 10 entries max
-            if (logElement.children.length > 10) {
+            // Keep log to 20 entries max
+            if (logElement.children.length > 20) {
                 logElement.removeChild(logElement.lastChild);
             }
         }
+
+        // Fallback in case OneSignal takes too long to load
+        setTimeout(function() {
+            if (!oneSignalInitialized) {
+                logMessage("Waiting for OneSignal to initialize...");
+                document.getElementById('enable-notifications').disabled = false;
+                document.getElementById('enable-notifications').addEventListener('click', function() {
+                    logMessage("OneSignal still initializing - please wait");
+                });
+            }
+        }, 5000);
     </script>
 </body>
 </html>
